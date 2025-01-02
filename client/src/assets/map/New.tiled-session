@@ -1,0 +1,46 @@
+{
+    "activeFile": "",
+    "expandedProjectPaths": [
+    ],
+    "fileStates": {
+        "": {
+            "scaleInDock": 1.5
+        },
+        "BetterTileset.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 2,
+            "scaleInEditor": 2
+        },
+        "DemoLayout.tmx": {
+            "scale": 2,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 110.5,
+                "y": 196.75
+            }
+        },
+        "DemoLayout.tmx#tiles": {
+            "scaleInDock": 1.5,
+            "scaleInEditor": 1
+        },
+        "map.json": {
+            "scale": 2,
+            "selectedLayer": 4,
+            "viewCenter": {
+                "x": 211.5,
+                "y": 212.75
+            }
+        },
+        "map.json#tiles": {
+            "scaleInDock": 1
+        }
+    },
+    "openFiles": [
+    ],
+    "project": "",
+    "recentFiles": [
+        "DemoLayout.tmx",
+        "BetterTileset.tsx",
+        "map.json"
+    ]
+}
