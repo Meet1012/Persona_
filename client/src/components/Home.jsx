@@ -4,20 +4,26 @@ import { useSocket } from "../context/SocketProvider";
 
 function NamePage() {
   const socket = useSocket();
+
+
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const handleClick = useCallback((e) => {
     e.preventDefault();
-    socket.emit("user:joined", name)
+    sessionStorage.setItem("MainPlayer", name)
+    socket.emit("user:joined", name);
     navigate("/game");
   });
 
   useEffect(() => {
-    socket.on("user:joined", handleClick);
-    return () =>{
-        socket.off("user:joined", handleClick)
+    if(!socket){
+      return 
     }
-  });
+    socket.on("user:joined", handleClick);
+    return () => {
+      socket.off("user:joined", handleClick);
+    };
+  },[socket]);
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center">
@@ -34,7 +40,10 @@ function NamePage() {
             className="w-full p-4 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
-        <button onClick={handleClick} className="w-full py-3 bg-blue-600 text-white rounded-md shadow-lg transform transition-all duration-300 hover:bg-blue-700 hover:scale-105">
+        <button
+          onClick={handleClick}
+          className="w-full py-3 bg-blue-600 text-white rounded-md shadow-lg transform transition-all duration-300 hover:bg-blue-700 hover:scale-105"
+        >
           Join Game
         </button>
       </div>

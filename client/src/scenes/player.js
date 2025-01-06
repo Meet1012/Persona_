@@ -10,64 +10,72 @@ class GameScene extends Phaser.Scene {
     super("scene-game");
     this.cursor;
     this.player;
-    this.playerId;
-    this.mainplayerName;
     this.socket;
     this.otherPlayers = {};
+    this.name = sessionStorage.getItem("MainPlayer");
+    this.playerGroup = {};
   }
 
   preload() {
     this.load.spritesheet("monsterup", monsterup, {
       frameWidth: 663.25,
       frameHeight: 650,
+      frameRate: 60,
     });
     this.load.spritesheet("monsterdown", monsterdown, {
       frameWidth: 663.25,
       frameHeight: 650,
+      frameRate: 60,
     });
     this.load.spritesheet("monsterleft", monsterleft, {
       frameWidth: 663.25,
       frameHeight: 650,
+      frameRate: 60,
     });
     this.load.spritesheet("monsterright", monsterright, {
       frameWidth: 663.25,
       frameHeight: 650,
+      frameRate: 60,
     });
   }
 
   create() {
     this.createPlayerAnimations();
     this.socket = io("http://localhost:8000");
+
+    // Main player setup
     this.player = this.physics.add
       .sprite(100, 100, "monsterdown")
       .setScale(0.05);
-    this.socket.emit("main:player");
-    this.socket.on("main:playerdone", ({ name }) => {
-      this.mainplayerText = this.add
-        .text(0, 0, name, {
-          font: "12px Arial",
-          fill: "#ffffff",
-          fontStyle: "bold",
-        })
-        .setOrigin(0.5);
-      this.mainplayerName = this.add.container(
-        this.player.x,
-        this.player.y - 25,
-        [this.mainplayerText]
-      );
+    this.player.setCollideWorldBounds(true);
+
+    this.mainplayerText = this.add
+      .text(this.player.x, this.player.y - 25, this.name, {
+        font: "12px Arial",
+        fill: "#ffffff",
+        fontStyle: "bold",
+      })
+      .setOrigin(0.5);
+
+    this.socket.on("current:players", (players) => {
+      Object.keys(players).forEach((nameID) => {
+        if (nameID !== this.name) {
+          this.addOtherPlayer(players[nameID], nameID);
+        }
+      });
     });
 
-    this.socket.emit("current:players");
-    this.socket.on("current:playersdone", (players, main_player) => {
-      console.log("Current Players : ", players);
-      const array = Object.values(players);
-      console.log("Array Value: ", array[0]);
-      for (let key in array[0]) {
-        if (array[0][key].username != main_player) {
-          console.log("Condition Matching: ", array[0][key].username != main_player)
-          continue;
+    this.socket.on("player:moved", ({ playerMoved, playerName }) => {
+      const otherPlayerData = this.otherPlayers[playerName];
+      if (otherPlayerData) {
+        const { sprite, nameText } = otherPlayerData;
+        sprite.setPosition(playerMoved.x, playerMoved.y);
+        nameText.setPosition(playerMoved.x, playerMoved.y - 25);
+        if (playerMoved.direction) {
+          sprite.play(`walk${playerMoved.direction}`, true);
+        } else {
+          sprite.anims.stop();
         }
-        console.log("Key Value: ", array[0][key].username);
       }
     });
 
@@ -77,33 +85,41 @@ class GameScene extends Phaser.Scene {
       left: Phaser.Input.Keyboard.KeyCodes.A,
       right: Phaser.Input.Keyboard.KeyCodes.D,
     });
+
+
+
+    // Collision Thing
+    // this.player.setCollideWorldBounds(true); // Collide with world bounds
+    // this.player.body.setBounce(0); // Disable bouncing
+    // this.player.body.setFriction(1); // Increase friction to reduce slidingsd
   }
 
   update() {
     this.player.setVelocity(0);
-    let direction = "down";
+    let direction = null;
     let moved = false;
+
     if (this.cursors.left.isDown) {
       this.player.setVelocityX(-100);
-      this.mainplayerName.setPosition(this.player.x, this.player.y - 25);
+      this.mainplayerText.setPosition(this.player.x, this.player.y - 25);
       this.player.play("walkleft", true);
       direction = "left";
       moved = true;
     } else if (this.cursors.right.isDown) {
       this.player.setVelocityX(100);
-      this.mainplayerName.setPosition(this.player.x, this.player.y - 25);
+      this.mainplayerText.setPosition(this.player.x, this.player.y - 25);
       this.player.play("walkright", true);
       direction = "right";
       moved = true;
     } else if (this.cursors.up.isDown) {
       this.player.setVelocityY(-100);
-      this.mainplayerName.setPosition(this.player.x, this.player.y - 25);
+      this.mainplayerText.setPosition(this.player.x, this.player.y - 25);
       this.player.play("walkup", true);
       direction = "up";
       moved = true;
     } else if (this.cursors.down.isDown) {
       this.player.setVelocityY(100);
-      this.mainplayerName.setPosition(this.player.x, this.player.y - 25);
+      this.mainplayerText.setPosition(this.player.x, this.player.y - 25);
       this.player.play("walkdown", true);
       direction = "down";
       moved = true;
@@ -112,14 +128,26 @@ class GameScene extends Phaser.Scene {
       this.player.anims.stop();
     }
 
+    if (!moved) {
+      direction = null;
+    }
+
     if (moved) {
       this.socket.emit("player:move", {
+        name: this.name,
         x: this.player.x,
         y: this.player.y,
         direction,
       });
     }
+    this.socket.emit("player:move", {
+      name: this.name,
+      x: this.player.x,
+      y: this.player.y,
+      direction,
+    });
   }
+
   createPlayerAnimations() {
     this.anims.create({
       key: "walkup",
@@ -155,20 +183,23 @@ class GameScene extends Phaser.Scene {
     });
   }
 
-  addOtherPlayer(playerInfo) {
-    console.log("Player Info: ", playerInfo);
-    const otherPlayerContainer = this.add.container(playerInfo.x, playerInfo.y);
-    const otherPlayerSprite = this.add
-      .sprite(0, 0, "monsterdown")
+  addOtherPlayer(playerInfo, playerName) {
+    const sprite = this.physics.add
+      .sprite(playerInfo.x, playerInfo.y, "monsterdown")
       .setScale(0.05);
-    const otherPlayerName = this.add
-      .text(0, -25, playerInfo.name, {
-        font: "14px Roboto Slab",
+
+    const nameText = this.add
+      .text(playerInfo.x, playerInfo.y - 25, playerName, {
+        font: "12px Arial",
+        fill: "#ffffff",
       })
-      .setOrigin(0, 0);
-    otherPlayerContainer.add([otherPlayerSprite, otherPlayerName]);
-    console.log("ID in add", typeof playerInfo.id);
-    this.otherPlayers[playerInfo.id] = otherPlayerContainer;
+      .setOrigin(0.5);
+    this.otherPlayers[playerName] = { sprite, nameText };
+    // this.physics.add.collider(this.player, sprite);
+    // Object.values(this.otherPlayers).forEach(({ sprite: otherSprite }) => {
+    //   console.log("Sprite Collision: ", sprite);
+    //   this.physics.add.collider(this.player, otherSprite);
+    // });
   }
 }
 

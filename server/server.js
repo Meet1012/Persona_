@@ -17,36 +17,28 @@ io.on("connection", (socket) => {
   socket.on("user:joined", (name) => {
     console.log(`${name} Connected`);
     main_player = name;
-    players[socket.id] = {
-      id: socket.id,
-      username: name,
+    players[name] = {
       x: 100,
       y: 100,
       direction: "down",
     };
   });
-
-  socket.on("main:player", () => {
-    console.log("Main Player Socket", main_player);
-    socket.emit("main:playerdone", { id: socket.id, name: main_player });
-  });
-
-  socket.on("current:players", () => {
-    console.log("Current Players !", players);
-    socket.emit("current:playersdone", {players, main_player});
-  });
+  console.log("Server Players: ", players);
+  io.emit("current:players", players);
 
   socket.on("player:move", (position) => {
-    if (players[socket.id]) {
-      players[socket.id] = {
-        id: socket.id,
-        username: main_player,
+    if (players[position.name]) {
+      players[position.name] = {
         x: position.x,
         y: position.y,
         direction: position.direction,
       };
-      console.log("Moved Player", players);
-      socket.broadcast.emit("player:moved", players[socket.id]);
+      // console.log("Moved Player", players);
+      // console.log("Moved Player Name: ", position.name);
+      socket.broadcast.emit("player:moved", {
+        playerMoved: players[position.name],
+        playerName: position.name,
+      });
     }
   });
 
