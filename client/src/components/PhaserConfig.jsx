@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from "react";
-import Phaser from "phaser";
+import React, { useEffect, useRef } from "react";
+import Phaser, { Scale } from "phaser";
 import GameScene from "../scenes/player";
 import MapScene from "../scenes/map";
+import ChatBox from "./ChatBox";
 
 const PhaserGame = () => {
   const gameContainerRef = useRef(null);
@@ -19,6 +20,9 @@ const PhaserGame = () => {
         },
       },
       scene: [MapScene, GameScene],
+      scale: {
+        pixelArt: true, // Add this line
+      },
     };
 
     const game = new Phaser.Game(config);
@@ -29,7 +33,15 @@ const PhaserGame = () => {
     };
   }, []);
 
-  return <div ref={gameContainerRef} />;
+  return (
+    <div className="flex">
+      <div
+        ref={gameContainerRef}
+        id="phaser-container"
+        className="w-full h-full"
+      ></div>
+    </div>
+  );
 };
 
 export default PhaserGame;
