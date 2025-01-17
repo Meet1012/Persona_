@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import PhaserGame from "./PhaserConfig";
 import ChatBox from "./ChatBox";
 

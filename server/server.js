@@ -11,30 +11,28 @@ const io = new Server(server, {
 });
 
 const players = {};
-let main_player = "";
 
 io.on("connection", (socket) => {
   socket.on("user:joined", (name) => {
     console.log(`${name} Connected`);
-    main_player = name;
-    console.log("Player Confirmation ", !players[name]);
+    console.log("Player Confirmation ", !players[socket.id]);
     io.to(socket.id).emit("current:players", players);
-    if (!players[name]) {
-      players[name] = {
-        socketId: socket.id,
+    if (!players[socket.id]) {
+      players[socket.id] = {
+        username: name,
         x: 100,
         y: 100,
         direction: "down",
       };
-      socket.broadcast.emit("new:player", [players[name], name]);
+      socket.broadcast.emit("new:player", [players[socket.id], name]);
     }
   });
   console.log("Server Players: ", players);
 
   socket.on("player:move", (position) => {
-    if (players[position.name]) {
-      players[position.name] = {
-        socketId: socket.id,
+    if (players[position.socketID]) {
+      players[position.socketID] = {
+        username: position.username,
         x: position.x,
         y: position.y,
         direction: position.direction,
@@ -42,8 +40,8 @@ io.on("connection", (socket) => {
       // console.log("Moved Player", players);
       // console.log("Moved Player Name: ", position.name);
       socket.broadcast.emit("player:moved", {
-        playerMoved: players[position.name],
-        playerName: position.name,
+        playerMoved: players[position.socketID],
+        playerName: position.username,
       });
     }
   });
@@ -52,11 +50,15 @@ io.on("connection", (socket) => {
   socket.on("interact:request", ({ from, to }) => {
     console.log(`Interaction request from ${from} to ${to}`);
     console.log(`Players: `, players);
-    const recipient = Object.values(players).find(
-      (player) => player.socketId === players[to]?.socketId
+
+    // Find the socketId of the recipient (to)
+    const recipientSocketId = Object.keys(players).find(
+      (socketId) => players[socketId]?.username === to
     );
-    if (recipient) {
-      io.to(recipient.socketId).emit("interaction:request", { from });
+
+    if (recipientSocketId) {
+      // Emit the interaction request to the recipient
+      io.to(recipientSocketId).emit("interaction:request", { from });
     } else {
       console.log(`Player ${to} not found or disconnected.`);
     }
@@ -69,15 +71,21 @@ io.on("connection", (socket) => {
         accepted ? "Accepted" : "Rejected"
       } by ${to} for ${from}`
     );
-    const requester = Object.values(players).find(
-      (player) => player.socketId === players[from]?.socketId
+
+    // Find the socketId of the requester (from)
+    const requesterSocketId = Object.keys(players).find(
+      (socketId) => players[socketId]?.username === from
     );
-    let toUser = players[to].socketId;
-    console.log("To User: ", toUser);
-    if (requester) {
-      io.to(requester.socketId).emit("interaction:response", {
-        fromSocket: players[from].socketId,
-        toSocket: toUser,
+
+    // Find the socketId of the recipient (to)
+    const recipientSocketId = Object.keys(players).find(
+      (socketId) => players[socketId]?.username === to
+    );
+
+    if (requesterSocketId) {
+      io.to(requesterSocketId).emit("interaction:response", {
+        fromSocket: requesterSocketId,
+        toSocket: recipientSocketId,
         from: to,
         accepted,
       });
@@ -90,7 +98,17 @@ io.on("connection", (socket) => {
     console.log(`From Socket: ${fromSocket}, To Socket: ${toSocket}`);
     io.to(fromSocket).emit("private:accepted");
     io.to(toSocket).emit("private:accepted");
-    console.log("Emit Completed !")
+  });
+
+  socket.on("join:room", () => {
+    console.log("Join room Socket!!");
+    socket.join("Private");
+    socket.emit("room:joined");
+  });
+
+  socket.on("private:message", (message) => {
+    console.log("Private Message Socket! ");
+    io.to("Private").emit("private:response", message);
   });
 
   socket.on("send:message", (messageData) => {
@@ -100,9 +118,12 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    console.log(`${main_player} Disconnected !`);
+    console.log("Disconnect in Server! ");
+    if (players[socket.id]) {
+      io.emit("player:disconnected", players[socket.id].username);
+    }
     delete players[socket.id];
-    socket.broadcast.emit("player:disconnected", socket.id);
+    socket.disconnect(true);
   });
 });
 

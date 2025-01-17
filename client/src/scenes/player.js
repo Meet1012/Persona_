@@ -121,7 +121,8 @@ class GameScene extends Phaser.Scene {
 
     // Emit player movement to server
     this.socket.emit("player:move", {
-      name: this.name,
+      socketID: this.socket.id,
+      username: this.name,
       x: this.player.x,
       y: this.player.y,
       direction,
@@ -224,9 +225,9 @@ class GameScene extends Phaser.Scene {
     // Sync players
     this.socket.on("current:players", (players) => {
       console.log("Current Players: ", players);
-      Object.keys(players).forEach((nameID) => {
-        if (nameID !== this.name) {
-          this.addOtherPlayer(players[nameID], nameID);
+      Object.keys(players).forEach((ID) => {
+        if (players[ID].username !== this.name) {
+          this.addOtherPlayer(players[ID], players[ID].username);
         }
       });
     });
@@ -298,6 +299,39 @@ class GameScene extends Phaser.Scene {
     const name = sessionStorage.getItem("MainPlayer");
     console.log("Sending user joined : ", name);
     this.socket.emit("user:joined", name);
+
+    this.socket.on("player:disconnected", (ID) => {
+      console.log("ID from Server: ", ID);
+
+      // Find the player by socket ID
+      const playerID = Object.keys(this.otherPlayers).find((playerID) => {
+        return playerID === ID; // Ensure you return the comparison result
+      });
+
+      if (playerID) {
+        console.log("Player Found: ", playerID);
+
+        // Get the player's sprite from this.otherPlayers
+        const playerData = this.otherPlayers[playerID];
+
+        // Destroy the sprite and remove the player from otherPlayers
+        if (playerData && playerData.sprite) {
+          playerData.sprite.destroy(); // Destroy the sprite
+          console.log(`Sprite for player ${playerID} destroyed.`);
+        }
+        if (playerData && playerData.nameText) {
+          playerData.nameText.destroy();
+        }
+
+        // Remove the player from the otherPlayers object
+        delete this.otherPlayers[playerID];
+        console.log(`Player ${playerID} removed from otherPlayers.`);
+      } else {
+        console.log(`Player with ID ${ID} not found in otherPlayers.`);
+      }
+
+      console.log("Updated otherPlayers: ", this.otherPlayers);
+    });
   }
 
   createInteractionUI() {
