@@ -128,38 +128,50 @@ class GameScene extends Phaser.Scene {
       direction,
     });
 
-    this.anyoverlap;
+    // Interaction overlap handling
+    let interactionEnded = false;
+    this.anyoverlap = false;
     this.intersectPlayer = null;
-    // console.log("Other Players: ", this.otherPlayers);
-    // Check for collisions with other players
+
     Object.values(this.otherPlayers).forEach(({ sprite, playerName }) => {
       const overlap = Phaser.Geom.Intersects.RectangleToRectangle(
         this.player.getBounds(),
         sprite.getBounds()
       );
+
       if (overlap) {
         this.anyoverlap = true;
         this.intersectPlayer = { sprite, playerName };
-      } else {
-        // console.log("Collision Is Removed Here !");
-        this.interactContainer.setVisible(false);
-      }
-
-      if (this.anyoverlap && this.intersectPlayer) {
-        const { sprite, playerName } = this.intersectPlayer;
-        // console.log("Collision Is Done Here Between: ", this.name, playerName);
-        this.interactContainer.setPosition(sprite.x, sprite.y - 50);
-        this.interactContainer.setVisible(true);
-        if (this.interactKey.isDown) {
-          console.log("Request Sent !", playerName);
-          this.socket.emit("interact:request", {
-            from: this.name,
-            to: playerName,
-          });
-          this.updateRequestMessage("Request Sent! Waiting for Reply......", 0);
-        }
       }
     });
+
+    // If an overlap exists, handle interaction
+    if (this.anyoverlap && this.intersectPlayer) {
+      const { sprite, playerName } = this.intersectPlayer;
+      this.interactContainer.setPosition(sprite.x, sprite.y - 50);
+      this.interactContainer.setVisible(true);
+
+      if (this.interactKey.isDown) {
+        console.log("Request Sent !", playerName);
+        this.socket.emit("interact:request", {
+          from: this.name,
+          to: playerName,
+        });
+        this.updateRequestMessage("Request Sent! Waiting for Reply......", 0);
+      }
+    } else {
+      // No overlap detected
+      if (this.interactContainer.visible) {
+        this.interactContainer.setVisible(false);
+        interactionEnded = true; // Mark that the interaction ended
+      }
+    }
+
+    // Notify the server if the interaction has ended
+    if (interactionEnded) {
+      this.socket.emit("player:left");
+      console.log("Interaction ended. Notification sent to the server.");
+    }
   }
 
   createPlayerAnimations() {

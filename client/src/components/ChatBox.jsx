@@ -28,7 +28,7 @@ const ChatBox = () => {
     socket.emit("join:room");
   };
 
-  const handleLeaveClick = useCallback(() => {
+  const handleLeave = useCallback(() => {
     setAccepted(false);
     setActiveTab("global");
   });
@@ -58,12 +58,14 @@ const ChatBox = () => {
     socket.on("private:response", (message) => {
       console.log("Private Message: ", message);
     });
+    socket.on("remove:private", handleLeave);
 
     return () => {
       socket.off("receive:message");
       socket.off("private:accepted");
       socket.off("room:joined");
       socket.off("private:response");
+      socket.off("remove:private");
     };
   }, [socket, handleReceiveMessage]);
 
@@ -171,14 +173,6 @@ const ChatBox = () => {
             }
           }}
         />
-        {accepted && activeTab === "private" && (
-          <button
-            className="bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-red-700 transition"
-            onClick={handleLeaveClick}
-          >
-            Leave
-          </button>
-        )}
         <button
           className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-blue-700 transition"
           onClick={sendMessage}

@@ -46,6 +46,10 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("player:left", () => {
+    socket.emit("remove:private");
+  });
+
   // Handle interaction request
   socket.on("interact:request", ({ from, to }) => {
     console.log(`Interaction request from ${from} to ${to}`);
