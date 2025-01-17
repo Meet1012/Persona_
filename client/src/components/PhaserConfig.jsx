@@ -1,8 +1,7 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Phaser, { Scale } from "phaser";
 import GameScene from "../scenes/player";
 import MapScene from "../scenes/map";
-import ChatBox from "./ChatBox";
 
 const PhaserGame = () => {
   const gameContainerRef = useRef(null);

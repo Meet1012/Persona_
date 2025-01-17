@@ -1,44 +1,33 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useSocket } from "../context/SocketProvider";
+import { closeSocket, getPlayerSocket } from "../scenes/getPlayerSocket";
 
 const ChatBox = () => {
-  const socket = useSocket();
+  const [socket, setSocket] = useState(null);
   const [messages, setMessages] = useState([]); // Global messages
-  const [privateMessages, setPrivateMessages] = useState({}); // {username: [messages]}
   const [currentMessage, setCurrentMessage] = useState("");
   const [username, setUsername] = useState("");
-  const [accepted, setAccepted] = useState(false);
-  const [activeTab, setActiveTab] = useState("global"); // 'global' or username
 
-  console.log("ChatBox Socket: ", socket);
-
-  const handleAccepted = useCallback(() => {
-    console.log("Accepted the Request !!");
-  }, []);
-
-  const handleRecieveMessage = useCallback((message) => {
-    if (message.recipient) {
-      // Private message
-      setPrivateMessages((prev) => ({
-        ...prev,
-        [message.author]: [...(prev[message.author] || []), message],
-      }));
-    } else {
-      // Global message
-      setMessages((prevMessages) => [...prevMessages, message]);
-    }
+  const handleReceiveMessage = useCallback((message) => {
+    console.log("Global Message Received:", message);
+    setMessages((prevMessages) => [...prevMessages, message]);
   }, []);
 
   useEffect(() => {
+    if (!socket) {
+      return;
+    }
     const userName = sessionStorage.getItem("MainPlayer") || "Anonymous";
     setUsername(userName);
-    socket.on("private:accepted", handleAccepted);
-    socket.on("receive:message", handleRecieveMessage);
+    console.log("[ChatBox] Socket ID: ", socket.id);
+
+    socket.on("receive:message", handleReceiveMessage);
+    console.log("receive:message set")
 
     return () => {
       socket.off("receive:message");
     };
-  }, [socket, handleAccepted, handleRecieveMessage]);
+  }, [socket]);
 
   const sendMessage = () => {
     if (currentMessage.trim() !== "") {
@@ -46,76 +35,50 @@ const ChatBox = () => {
         message: currentMessage,
         timestamp: new Date().toLocaleTimeString(),
         author: username,
-        recipient: activeTab === "global" ? null : activeTab,
+        recipient: null, // Always global
       };
+      console.log("Send Message: ", messageData);
 
       socket.emit("send:message", messageData);
-
-      if (activeTab !== "global") {
-        // Add to private messages
-        setPrivateMessages((prev) => ({
-          ...prev,
-          [activeTab]: [...(prev[activeTab] || []), messageData],
-        }));
-      }
-
       setCurrentMessage("");
     }
   };
 
+  useEffect(() => {
+    const sock = getPlayerSocket();
+    console.log("Socket created at chatbox")
+    setSocket(sock);
+
+    return () => {
+      console.log("Closing Socket !!")
+      closeSocket();
+    };
+  }, []);
+
   return (
     <div className="flex flex-col h-full bg-gray-900 rounded-lg shadow-lg overflow-hidden">
       {/* Header */}
-      <div className="bg-gray-800 text-white text-lg font-bold px-4 py-3 border-b border-gray-700 flex justify-between">
-        <span>Chat Box</span>
-        <select
-          className="bg-gray-700 text-white rounded-lg px-3 py-1 outline-none"
-          value={activeTab}
-          onChange={(e) => setActiveTab(e.target.value)}
-        >
-          <option value="global">Global Chat</option>
-
-          {accepted && <option value="private">Private Chat</option>}
-        </select>
+      <div className="bg-gray-800 text-white text-lg font-bold px-4 py-3 border-b border-gray-700">
+        <span>Global Chat</span>
       </div>
 
       {/* Chat Messages */}
       <div className="flex-1 bg-gray-900 p-4 overflow-y-auto space-y-6">
-        {activeTab === "global"
-          ? messages.map((msg, index) => (
-              <div
-                key={index}
-                className={msg.author === username ? "text-right" : ""}
-              >
-                <p className="text-sm text-gray-400">{msg.author}</p>
-                <div
-                  className={`${
-                    msg.author === username
-                      ? "bg-blue-600 ml-auto"
-                      : "bg-gray-800"
-                  } text-white text-sm p-3 rounded-lg max-w-xs`}
-                >
-                  {msg.message}
-                </div>
-              </div>
-            ))
-          : (privateMessages[activeTab] || []).map((msg, index) => (
-              <div
-                key={index}
-                className={msg.author === username ? "text-right" : ""}
-              >
-                <p className="text-sm text-gray-400">{msg.author}</p>
-                <div
-                  className={`${
-                    msg.author === username
-                      ? "bg-blue-600 ml-auto"
-                      : "bg-gray-800"
-                  } text-white text-sm p-3 rounded-lg max-w-xs`}
-                >
-                  {msg.message}
-                </div>
-              </div>
-            ))}
+        {messages.map((msg, index) => (
+          <div
+            key={index}
+            className={msg.author === username ? "text-right" : ""}
+          >
+            <p className="text-sm text-gray-400">{msg.author}</p>
+            <div
+              className={`${
+                msg.author === username ? "bg-blue-600 ml-auto" : "bg-gray-800"
+              } text-white text-sm p-3 rounded-lg max-w-xs`}
+            >
+              {msg.message}
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Input Section */}

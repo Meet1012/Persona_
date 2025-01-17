@@ -1,30 +1,19 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSocket } from "../context/SocketProvider";
 
 function NamePage() {
-  const socket = useSocket();
-
-
   const navigate = useNavigate();
   const [name, setName] = useState("");
-  const handleClick = useCallback((e) => {
-    e.preventDefault();
-    sessionStorage.setItem("MainPlayer", name)
-    socket.emit("user:joined", name);
-    navigate("/game");
-  });
 
-  useEffect(() => {
-    if(!socket){
-      return 
-    }
-    socket.on("user:joined", handleClick);
-    return () => {
-      socket.off("user:joined", handleClick);
-    };
-  },[socket]);
+  const handleClick = useCallback(
+    (e) => {
+      e.preventDefault();
 
+      sessionStorage.setItem("MainPlayer", name);
+      navigate("/game");
+    },
+    [name, navigate]
+  );
   return (
     <div className="min-h-screen bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center">
       <div className="bg-white p-10 rounded-xl shadow-2xl w-full max-w-lg">

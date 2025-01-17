@@ -18,6 +18,7 @@ io.on("connection", (socket) => {
     console.log(`${name} Connected`);
     main_player = name;
     console.log("Player Confirmation ", !players[name]);
+    io.to(socket.id).emit("current:players", players);
     if (!players[name]) {
       players[name] = {
         socketId: socket.id,
@@ -29,7 +30,6 @@ io.on("connection", (socket) => {
     }
   });
   console.log("Server Players: ", players);
-  io.to(socket.id).emit("current:players", players);
 
   socket.on("player:move", (position) => {
     if (players[position.name]) {

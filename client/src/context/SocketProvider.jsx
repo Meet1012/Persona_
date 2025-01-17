@@ -1,11 +1,5 @@
-import React, {
-  createContext,
-  useMemo,
-  useContext,
-  useState,
-  useEffect,
-} from "react";
-import { io } from "socket.io-client";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { getPlayerSocket, closeSocket } from "../scenes/getPlayerSocket";
 
 const SocketContext = createContext(null);
 
@@ -14,20 +8,20 @@ export const useSocket = () => {
   return socket;
 };
 
-export const SocketProvider = (props) => {
-  // const socket = useMemo(() => io("localhost:8000"), []);
-  const [socket, setSocket] = useState();
+export const SocketProvider = ({ children }) => {
+  const [socket, setSocket] = useState(null);
+
   useEffect(() => {
-    const soc = io("localhost:8000");
-    setSocket(soc);
+    const socketInstance = null;
+    // console.log("Socket created in socket provider")
+    setSocket(socketInstance);
+
     return () => {
-      soc.close();
+      // closeSocket();
     };
   }, []);
 
   return (
-    <SocketContext.Provider value={socket}>
-      {props.children}
-    </SocketContext.Provider>
+    <SocketContext.Provider value={socket}>{children}</SocketContext.Provider>
   );
 };

@@ -4,6 +4,8 @@ import monsterdown from "../assets/character/downwalk_pokemon.png";
 import monsterleft from "../assets/character/leftwalk_pokemon.png";
 import monsterright from "../assets/character/rightwalk_pokemon.png";
 import { io } from "socket.io-client";
+import { getPlayerSocket } from "./getPlayerSocket";
+import { useSocket } from "../context/SocketProvider";
 
 class GameScene extends Phaser.Scene {
   constructor() {
@@ -43,7 +45,8 @@ class GameScene extends Phaser.Scene {
 
   create() {
     this.createPlayerAnimations();
-    this.socket = io("localhost:8000");
+    this.socket = getPlayerSocket();
+    console.log("Socket created at Player.js");
 
     // Main player setup
     this.player = this.physics.add
@@ -220,18 +223,21 @@ class GameScene extends Phaser.Scene {
   setupSocketListeners() {
     // Sync players
     this.socket.on("current:players", (players) => {
+      console.log("Current Players: ", players);
       Object.keys(players).forEach((nameID) => {
         if (nameID !== this.name) {
           this.addOtherPlayer(players[nameID], nameID);
         }
       });
     });
+    console.log("current:players set");
 
     //New player
     this.socket.on("new:player", (player) => {
       console.log("Player Details: ", player);
       this.addOtherPlayer(player[0], player[1]);
     });
+    console.log("new:player set");
 
     // Handle player movement
     this.socket.on("player:moved", ({ playerMoved, playerName }) => {
@@ -247,6 +253,7 @@ class GameScene extends Phaser.Scene {
         }
       }
     });
+    console.log("player:moved set");
 
     // Handle interaction request
     this.socket.on("interaction:request", ({ from }) => {
@@ -271,6 +278,7 @@ class GameScene extends Phaser.Scene {
         this.choiceContainer.setVisible(false);
       });
     });
+    console.log("interaction:request set");
 
     // Handle interaction response
     this.socket.on(
@@ -285,6 +293,11 @@ class GameScene extends Phaser.Scene {
         }
       }
     );
+    console.log("interaction:response set");
+
+    const name = sessionStorage.getItem("MainPlayer");
+    console.log("Sending user joined : ", name);
+    this.socket.emit("user:joined", name);
   }
 
   createInteractionUI() {
