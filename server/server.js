@@ -70,11 +70,11 @@ io.on("connection", (socket) => {
 
   // Handle interaction response
   socket.on("interact:response", ({ accepted, from, to }) => {
-    console.log(
-      `Interaction response: ${
-        accepted ? "Accepted" : "Rejected"
-      } by ${to} for ${from}`
-    );
+    // console.log(
+    //   `Interaction response: ${
+    //     accepted ? "Accepted" : "Rejected"
+    //   } by ${to} for ${from}`
+    // );
 
     // Find the socketId of the requester (from)
     const requesterSocketId = Object.keys(players).find(
@@ -99,26 +99,34 @@ io.on("connection", (socket) => {
   });
 
   socket.on("new:private", ({ fromSocket, toSocket }) => {
-    console.log(`From Socket: ${fromSocket}, To Socket: ${toSocket}`);
-    io.to(fromSocket).emit("private:accepted");
-    io.to(toSocket).emit("private:accepted");
-  });
-
-  socket.on("join:room", () => {
-    console.log("Join room Socket!!");
-    socket.join("Private");
-    socket.emit("room:joined");
-  });
-
-  socket.on("private:message", (message) => {
-    console.log("Private Message Socket! ");
-    io.to("Private").emit("private:response", message);
+    // console.log(
+    //   ` NEW Private From Socket: ${fromSocket}, To Socket: ${toSocket}`
+    // );
+    io.to(fromSocket).emit("private:accepted", { to: toSocket, flag: true });
+    io.to(toSocket).emit("private:accepted", { to: fromSocket, flag: false });
   });
 
   socket.on("send:message", (messageData) => {
     let message = { ...messageData };
     console.log("Message Sent !!", message);
     io.emit("receive:message", message);
+  });
+
+  socket.on("ice:candidate", ({ candidate, to }) => {
+    console.log(`Received ICE candidate from ${socket.id} to ${to}`);
+    io.to(to).emit("ice:candidate", { candidate, from: socket.id });
+  });
+
+  socket.on("created:offer", ({ offer, to }) => {
+    console.log(`Received offer from ${socket.id} to ${to}`);
+    console.log("Offer Generated is: ", { offer });
+    io.to(to).emit("offer", { offer, from: socket.id });
+  });
+
+  socket.on("created:answer", ({ answer, to }) => {
+    console.log(`Received answer from ${socket.id} to ${to}`);
+    console.log("Answer Generated is: ", { answer });
+    io.to(to).emit("answer", { answer, from: socket.id });
   });
 
   socket.on("disconnect", () => {
