@@ -1,0 +1,60 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "",
+    "expandedProjectPaths": [
+    ],
+    "fileStates": {
+        "": {
+            "scaleInDock": 0.5
+        },
+        "map.json": {
+            "scale": 1.2504374999999999,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 399.86004898285603,
+                "y": 274.7038536512221
+            }
+        },
+        "map.json#room": {
+            "scaleInDock": 1
+        },
+        "tiled_map.tmx": {
+            "scale": 0.75,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 366.6666666666667,
+                "y": 255.33333333333326
+            }
+        },
+        "tiled_map.tmx#room": {
+            "scaleInDock": 0.75,
+            "scaleInEditor": 1
+        }
+    },
+    "last.exportedFilePath": "D:/Project/Game_Engine/client/src/assets/map/RoomMap",
+    "last.externalTilesetPath": "D:/Project/Game_Engine/client/src/assets/map/RoomMap",
+    "last.imagePath": "C:/Users/meet2/Downloads",
+    "map.height": 55,
+    "map.lastUsedExportFilter": "JSON map files (*.tmj *.json)",
+    "map.lastUsedFormat": "tmx",
+    "map.tileHeight": 10,
+    "map.tileWidth": 10,
+    "map.width": 80,
+    "openFiles": [
+    ],
+    "project": "untitled.tiled-project",
+    "recentFiles": [
+        "tiled_map.tmx",
+        "map.json"
+    ],
+    "tileset.lastUsedFilter": "Tiled tileset files (*.tsx *.xml)",
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 10,
+        "width": 10
+    },
+    "tileset.useTransparentColor": true
+}

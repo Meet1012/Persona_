@@ -62,6 +62,7 @@ io.on("connection", (socket) => {
 
     if (recipientSocketId) {
       // Emit the interaction request to the recipient
+      console.log("Request Recipient !!");
       io.to(recipientSocketId).emit("interaction:request", { from });
     } else {
       console.log(`Player ${to} not found or disconnected.`);

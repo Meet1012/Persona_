@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import Phaser, { Scale } from "phaser";
-import GameScene from "../scenes/player";
+import getGameScene from "../scenes/player";
 import MapScene from "../scenes/map";
 
 const PhaserGame = () => {
@@ -9,8 +9,8 @@ const PhaserGame = () => {
   useEffect(() => {
     const config = {
       type: Phaser.AUTO,
-      width: 1440,
-      height: 640,
+      width: 800,
+      height: 550,
       physics: {
         default: "arcade",
         arcade: {
@@ -18,7 +18,7 @@ const PhaserGame = () => {
           debug: true,
         },
       },
-      scene: [MapScene, GameScene],
+      scene: [MapScene.MapScene, getGameScene(MapScene.collisionLayer)],
       scale: {
         pixelArt: true, // Add this line
       },
@@ -33,7 +33,7 @@ const PhaserGame = () => {
   }, []);
 
   return (
-    <div className="flex">
+    <div className="flex bg-yellow-200">
       <div
         ref={gameContainerRef}
         id="phaser-container"

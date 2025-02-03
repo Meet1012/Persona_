@@ -1,4 +1,4 @@
-import Phaser from "phaser";
+import Phaser, { Game } from "phaser";
 import monsterup from "../assets/character/upwalk_pokemon.png";
 import monsterdown from "../assets/character/downwalk_pokemon.png";
 import monsterleft from "../assets/character/leftwalk_pokemon.png";
@@ -6,7 +6,7 @@ import monsterright from "../assets/character/rightwalk_pokemon.png";
 import { io } from "socket.io-client";
 import { getPlayerSocket } from "./getPlayerSocket";
 import { useSocket } from "../context/SocketProvider";
-
+const collisionLayer = { layer: null };
 class GameScene extends Phaser.Scene {
   constructor() {
     super("scene-game");
@@ -78,6 +78,9 @@ class GameScene extends Phaser.Scene {
 
     // Interaction UI
     this.createInteractionUI();
+    console.log("Collision Layer in player.js: ", collisionLayer.layer.layer);
+    this.physics.add.collider(this.player, collisionLayer.layer.layer);
+    collisionLayer.layer.layer.setCollisionBetween(0,1);
   }
 
   update() {
@@ -120,13 +123,15 @@ class GameScene extends Phaser.Scene {
     }
 
     // Emit player movement to server
-    this.socket.emit("player:move", {
-      socketID: this.socket.id,
-      username: this.name,
-      x: this.player.x,
-      y: this.player.y,
-      direction,
-    });
+    setTimeout(() => {
+      this.socket.emit("player:move", {
+        socketID: this.socket.id,
+        username: this.name,
+        x: this.player.x,
+        y: this.player.y,
+        direction,
+      });
+    }, 200);
 
     // Interaction overlap handling
     let interactionEnded = false;
@@ -405,5 +410,8 @@ class GameScene extends Phaser.Scene {
     this.choiceContainer.setVisible(false);
   }
 }
-
-export default GameScene;
+const getGameScene = (Layer) => {
+  collisionLayer.layer = Layer;
+  return GameScene;
+};
+export default getGameScene;
