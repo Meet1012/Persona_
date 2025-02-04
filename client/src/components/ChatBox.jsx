@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { closeSocket, getPlayerSocket } from "../scenes/getPlayerSocket";
+import { Send } from "lucide-react";
 
 const ChatBox = () => {
   const [socket, setSocket] = useState(null);
@@ -98,7 +99,7 @@ const ChatBox = () => {
   return (
     <div className="flex flex-col h-full bg-gray-900 rounded-lg shadow-lg overflow-hidden">
       {/* Header */}
-      <div className="bg-gray-800 text-white text-lg font-bold px-4 py-3 border-b border-gray-700 flex justify-between items-center">
+      <div className="bg-gray-800 text-blue-600 text-lg font-bold px-4 py-3 border-b border-gray-700 flex justify-between items-center">
         <span>Chat Here!</span>
         <select
           className="bg-gray-700 text-white rounded-lg px-3 py-1 outline-none"
@@ -112,20 +113,20 @@ const ChatBox = () => {
 
       {/* Chat Messages */}
       {activeTab === "global" && (
-        <div className="flex-1 bg-gray-900 p-4 overflow-y-auto space-y-6">
+        <div className="flex-1 p-4 overflow-y-auto space-y-4">
           {globalmessages.map((msg, index) => (
             <div
               key={index}
               className={msg.author === username ? "text-right" : ""}
             >
-              <p className="text-sm text-gray-400">{msg.author}</p>
               <div
                 className={`${
                   msg.author === username
-                    ? "bg-blue-600 ml-auto"
+                    ? "bg-gray-700/50 ml-auto"
                     : "bg-gray-800"
-                } text-white text-sm p-3 rounded-lg max-w-xs`}
+                } text-gray-200 text-sm p-3 rounded-lg max-w-xs`}
               >
+                <p className="text-lg text-blue-400">{msg.author}</p>
                 {msg.message}
               </div>
             </div>
@@ -135,19 +136,19 @@ const ChatBox = () => {
 
       {/* Private Chat Messages */}
       {activeTab === "private" && (
-        <div className="flex-1 bg-gray-900 p-4 overflow-y-auto space-y-6">
+        <div className="flex-1 bg-gray-700/50 p-4 overflow-y-auto space-y-6">
           {privatemessages.map((msg, index) => (
             <div
               key={index}
               className={msg.author === username ? "text-right" : ""}
             >
-              <p className="text-sm text-gray-400">{msg.author}</p>
+              <p className="text-sm text-blue-400">{msg.author}</p>
               <div
                 className={`${
                   msg.author === username
-                    ? "bg-blue-600 ml-auto"
+                    ? "bg-gray-700/50 ml-auto"
                     : "bg-gray-800"
-                } text-white text-sm p-3 rounded-lg max-w-xs`}
+                } text-gray-200 text-sm p-3 rounded-lg max-w-xs`}
               >
                 {msg.message}
               </div>
@@ -174,10 +175,10 @@ const ChatBox = () => {
           }}
         />
         <button
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-blue-700 transition"
           onClick={sendMessage}
+          className="p-2 bg-blue-600 rounded-full hover:bg-blue-700 transition-colors"
         >
-          Send
+          <Send className="w-5 h-5" />
         </button>
       </div>
     </div>

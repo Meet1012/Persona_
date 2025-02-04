@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+* {
+  font-family: serif;
+}
+
 a {
   font-weight: 500;
   color: #646cff;

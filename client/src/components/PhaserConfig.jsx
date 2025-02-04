@@ -33,13 +33,11 @@ const PhaserGame = () => {
   }, []);
 
   return (
-    <div className="flex bg-yellow-200">
-      <div
-        ref={gameContainerRef}
-        id="phaser-container"
-        className="w-full h-full"
-      ></div>
-    </div>
+    <div
+      ref={gameContainerRef}
+      // id="phaser-container"
+      // className="w-full h-full"
+    ></div>
   );
 };
 
