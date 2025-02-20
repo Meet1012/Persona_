@@ -118,7 +118,7 @@ io.on("connection", (socket) => {
 
   socket.on("ice:candidate", ({ candidate, to }) => {
     console.log(`Received ICE candidate from ${socket.id} to ${to}`);
-    io.to(to).emit("ice:candidate", { candidate, from: socket.id });
+    io.to(to).emit("newice:candidate", { candidate, from: socket.id });
   });
 
   socket.on("created:offer", ({ offer, to }) => {
