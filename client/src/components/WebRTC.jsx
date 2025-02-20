@@ -16,11 +16,11 @@ const WebRTC = () => {
     const peer = new RTCPeerConnection({
       iceServers: [
         { urls: "stun:stun.l.google.com:19302" }, // Free Google STUN Server
-        // {
-        //   urls: "turn:global.relay.metered.ca:443",
-        //   username: "f6507426c0f4f89d0bda02e2",
-        //   credential: "7YF0907XexAfvkbL",
-        // },
+        {
+          urls: "turn:global.relay.metered.ca:443",
+          username: "f6507426c0f4f89d0bda02e2",
+          credential: "7YF0907XexAfvkbL",
+        },
       ],
     });
 
