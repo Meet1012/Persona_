@@ -32,13 +32,7 @@ const PhaserGame = () => {
     };
   }, []);
 
-  return (
-    <div
-      ref={gameContainerRef}
-      // id="phaser-container"
-      // className="w-full h-full"
-    ></div>
-  );
+  return <div className="flex-1 bg-black" ref={gameContainerRef}></div>;
 };
 
 export default PhaserGame;

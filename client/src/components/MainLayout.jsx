@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import PhaserGame from "./PhaserConfig";
 import ChatBox from "./ChatBox";
 import WebRTC from "./WebRTC";
+import SideBar from "./SideBar";
 import {
   Send,
   Mic,
@@ -34,11 +35,10 @@ const MainLayout = () => {
     <div>
       {/* Left Side - Video Feeds */}
       <WebRTC />
-      <div className="flex">
-        <PhaserGame />
-        <div className="w-1/3 bg-gray-900 absolute right-0 top-0 h-screen">
-          <ChatBox />
-        </div>
+      <SideBar />
+      <PhaserGame className="ml-64" />
+      <div className="w-1/3 bg-gray-900 absolute right-0 top-0 h-screen">
+        <ChatBox />
       </div>
     </div>
   );

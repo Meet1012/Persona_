@@ -3,7 +3,6 @@ import monsterup from "../assets/character/upwalk_pokemon.png";
 import monsterdown from "../assets/character/downwalk_pokemon.png";
 import monsterleft from "../assets/character/leftwalk_pokemon.png";
 import monsterright from "../assets/character/rightwalk_pokemon.png";
-import { io } from "socket.io-client";
 import { getPlayerSocket } from "./getPlayerSocket";
 import { useSocket } from "../context/SocketProvider";
 const collisionLayer = { layer: null };
@@ -80,7 +79,7 @@ class GameScene extends Phaser.Scene {
     this.createInteractionUI();
     console.log("Collision Layer in player.js: ", collisionLayer.layer.layer);
     this.physics.add.collider(this.player, collisionLayer.layer.layer);
-    collisionLayer.layer.layer.setCollisionBetween(0,1);
+    collisionLayer.layer.layer.setCollisionBetween(0, 1);
   }
 
   update() {
@@ -276,7 +275,6 @@ class GameScene extends Phaser.Scene {
     // Handle interaction request
     this.socket.on("interaction:request", ({ from }) => {
       this.choiceContainer.setVisible(true);
-      console.log("Choice Container on !!");
       const infoText = this.choiceContainer.getByName("infoText");
       infoText.setText(`${from} wants to interact. Accept?`);
       this.acceptButton.on("pointerdown", () => {
@@ -316,6 +314,17 @@ class GameScene extends Phaser.Scene {
     const name = sessionStorage.getItem("MainPlayer");
     console.log("Sending user joined : ", name);
     this.socket.emit("user:joined", name);
+
+    this.socket.on("notification:recieved", ({ Name }) => {
+      console.log("Player Name In Notification: ", Name);
+      const notificationText =
+        this.notificationContainer.getByName("notificationText");
+      notificationText.setText(`${Name} has made a Ping !`);
+      this.notificationContainer.setVisible(true);
+      this.okayButton.on("pointerdown", () => {
+        this.notificationContainer.setVisible(false);
+      });
+    });
 
     this.socket.on("player:disconnected", (ID) => {
       console.log("ID from Server: ", ID);
@@ -377,7 +386,9 @@ class GameScene extends Phaser.Scene {
       this.scale.width / 2,
       this.scale.height / 2
     );
-    const bg = this.add.rectangle(0, 0, 300, 150, 0x000000, 0.8).setOrigin(0.5);
+    const bg_choice = this.add
+      .rectangle(0, 0, 300, 150, 0x000000, 0.8)
+      .setOrigin(0.5);
     const acceptButton = this.add
       .text(-50, 0, "Accept", {
         font: "16px Arial",
@@ -385,7 +396,7 @@ class GameScene extends Phaser.Scene {
         backgroundColor: "#000000",
         padding: { x: 10, y: 5 },
       })
-      .setInteractive();
+      .setInteractive({ cursor: "pointer" });
     this.acceptButton = acceptButton; // Save for later use
 
     const rejectButton = this.add
@@ -395,7 +406,7 @@ class GameScene extends Phaser.Scene {
         backgroundColor: "#000000",
         padding: { x: 10, y: 5 },
       })
-      .setInteractive();
+      .setInteractive({ cursor: "pointer" });
     this.rejectButton = rejectButton; // Save for later use
 
     const infoText = this.add
@@ -406,8 +417,38 @@ class GameScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setName("infoText");
 
-    this.choiceContainer.add([bg, acceptButton, rejectButton, infoText]);
+    this.choiceContainer.add([bg_choice, acceptButton, rejectButton, infoText]);
     this.choiceContainer.setVisible(false);
+
+    this.notificationContainer = this.add.container(
+      this.scale.width / 2,
+      this.scale.height / 2
+    );
+    const notificationText = this.add
+      .text(0, -50, "Notification from: ", {
+        font: "16px Arial",
+        fill: "#ffffff",
+      })
+      .setName("notificationText")
+      .setOrigin(0.5);
+    const bg_notification = this.add
+      .rectangle(0, 0, 300, 150, 0x000000, 0.8)
+      .setOrigin(0.5);
+    const okayButton = this.add
+      .text(50, 0, "OKAY", {
+        font: "16px Retro",
+        fill: "#00ff00",
+        backgroundColor: "#000000",
+        padding: { x: 10, y: 5 },
+      })
+      .setInteractive({ cursor: "pointer" });
+    this.okayButton = okayButton;
+    this.notificationContainer.add([
+      bg_notification,
+      notificationText,
+      okayButton,
+    ]);
+    this.notificationContainer.setVisible(false);
   }
 }
 const getGameScene = (Layer) => {

@@ -2,6 +2,7 @@ import express from "express";
 import http from "http";
 import path from "path";
 import { Server } from "socket.io";
+import { text } from "stream/consumers";
 
 const app = express();
 app.use(express.static(path.join("dist")));
@@ -27,7 +28,11 @@ io.on("connection", (socket) => {
         y: 100,
         direction: "down",
       };
-      socket.broadcast.emit("new:player", [players[socket.id], name]);
+      socket.broadcast.emit("new:player", [
+        players[socket.id],
+        name,
+        socket.id,
+      ]);
     }
   });
   console.log("Server Players: ", players);
@@ -131,6 +136,11 @@ io.on("connection", (socket) => {
     console.log(`Received answer from ${socket.id} to ${to}`);
     console.log("Answer Generated is: ", { answer });
     io.to(to).emit("answer", { answer, from: socket.id });
+  });
+
+  socket.on("sent:notification", ({socketID, playerName}) => {
+    console.log("Notification Sent Called !!", socketID, playerName);
+    io.to(socketID).emit("notification:recieved", { Name: playerName });
   });
 
   socket.on("disconnect", () => {
