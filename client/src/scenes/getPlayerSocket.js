@@ -7,7 +7,7 @@ export const getPlayerSocket = () => {
     // socket = io(`${window.location.origin}`, {
     //   path: "/ws/",
     // });
-    socket = io(`http://localhost:8000`, {
+    socket = io("https://persona-zsjv.onrender.com", {
       path: "/ws/",
     });
     console.log("New Socket---");

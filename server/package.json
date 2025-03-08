@@ -2,7 +2,6 @@
   "name": "game_engine",
   "type": "module",
   "devDependencies": {
-    "vite": "^4.4.5"
   },
   "dependencies": {
     "express": "^4.21.2",
