@@ -1,8 +1,6 @@
 {
   "name": "game_engine",
   "type": "module",
-  "devDependencies": {
-  },
   "dependencies": {
     "express": "^4.21.2",
     "game_engine": "file:",
