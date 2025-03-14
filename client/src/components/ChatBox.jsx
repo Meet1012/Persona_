@@ -139,7 +139,7 @@ const ChatBox = () => {
                 >
                   <div
                     className={`max-w-[75%] p-3 rounded-lg ${
-                      msg.author === username ? "bg-[#8E6BC5]" : "bg-[#4A2B7F]"
+                      msg.author === username ? "bg-[#451f82]" : "bg-[#4A2B7F]"
                     }`}
                   >
                     <p className="text-sm font-semibold text-[#D3C5E5]">
@@ -160,7 +160,7 @@ const ChatBox = () => {
                 >
                   <div
                     className={`max-w-[75%] p-3 rounded-lg ${
-                      msg.author === username ? "bg-[#8E6BC5]" : "bg-[#4A2B7F]"
+                      msg.author === username ? "bg-[#6d3cbc]" : "bg-[#4A2B7F]"
                     }`}
                   >
                     <p className="text-sm font-semibold text-[#D3C5E5]">
