@@ -9,8 +9,8 @@ const PhaserGame = () => {
   useEffect(() => {
     const config = {
       type: Phaser.AUTO,
-      width: 800,
-      height: 550,
+      width: 1540,
+      height: 750,
       physics: {
         default: "arcade",
         arcade: {
@@ -18,7 +18,12 @@ const PhaserGame = () => {
           debug: true,
         },
       },
-      scene: [MapScene.MapScene, getGameScene(MapScene.collisionLayer)],
+      scene: [
+        MapScene.MapScene,
+        getGameScene(
+          MapScene.collisionLayer,
+        ),
+      ],
       scale: {
         pixelArt: true, // Add this line
       },

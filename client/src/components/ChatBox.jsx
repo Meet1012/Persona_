@@ -1,30 +1,37 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { closeSocket, getPlayerSocket } from "../scenes/getPlayerSocket";
-import { Send } from "lucide-react";
+import { Send, X, MessageCircle } from "lucide-react";
 
 const ChatBox = () => {
   const [socket, setSocket] = useState(null);
+  const [isOpen, setIsOpen] = useState(false);
   const [accepted, setAccepted] = useState(false);
-  const [globalmessages, setglobalMessages] = useState([]); // Global messages
-  const [privatemessages, setprivateMessages] = useState([]); // Private messages
+  const [globalmessages, setglobalMessages] = useState([]);
+  const [privatemessages, setprivateMessages] = useState([]);
   const [currentMessage, setCurrentMessage] = useState("");
   const [username, setUsername] = useState("");
-  const [activeTab, setActiveTab] = useState("global"); // 'global' or 'private'
+  const [activeTab, setActiveTab] = useState("global");
+  const messagesEndRef = useRef(null);
+  const containerRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [globalmessages, privatemessages, activeTab]);
 
   const handleReceiveMessage = useCallback((message) => {
-    console.log("Global Message Received:", message);
     if (message.recipient === "private") {
-      setprivateMessages((prevMessages) => [...prevMessages, message]);
+      setprivateMessages((prev) => [...prev, message]);
     } else {
-      setglobalMessages((prevMessages) => [...prevMessages, message]);
+      setglobalMessages((prev) => [...prev, message]);
     }
   }, []);
 
   const handlePrivateAccepted = () => {
-    if (!socket) {
-      return;
-    }
-    console.log("Private Accepted!!");
+    if (!socket) return;
     setAccepted(true);
     socket.emit("join:room");
   };
@@ -32,33 +39,25 @@ const ChatBox = () => {
   const handleLeave = useCallback(() => {
     setAccepted(false);
     setActiveTab("global");
-  });
+  }, []);
 
   const handleRoomJoined = () => {
-    if (!socket) {
-      return;
-    }
-    console.log("Room Joined !");
+    if (!socket) return;
     socket.emit("private:message", "Welcome to the Private Room !!");
   };
 
   useEffect(() => {
-    if (!socket) {
-      return;
-    }
+    if (!socket) return;
+
     const userName = sessionStorage.getItem("MainPlayer") || "Anonymous";
     setUsername(userName);
-    console.log("[ChatBox] Socket ID: ", socket.id);
 
     socket.on("receive:message", handleReceiveMessage);
-    console.log("receive:message set");
     socket.on("private:accepted", handlePrivateAccepted);
-    console.log("Private Accepted Recieved");
     socket.on("room:joined", handleRoomJoined);
-    console.log("Room Joined Socket");
-    socket.on("private:response", (message) => {
-      console.log("Private Message: ", message);
-    });
+    socket.on("private:response", (message) =>
+      console.log("Private Message:", message)
+    );
     socket.on("remove:private", handleLeave);
 
     return () => {
@@ -68,119 +67,136 @@ const ChatBox = () => {
       socket.off("private:response");
       socket.off("remove:private");
     };
-  }, [socket, handleReceiveMessage]);
+  }, [socket, handleReceiveMessage, handleLeave]);
 
   const sendMessage = () => {
-    if (currentMessage.trim() !== "") {
-      const messageData = {
-        message: currentMessage,
-        timestamp: new Date().toLocaleTimeString(),
-        author: username,
-        recipient: activeTab === "global" ? null : "private", // Either global or private
-      };
-      console.log("Send Message: ", messageData);
+    if (currentMessage.trim() === "") return;
 
-      socket.emit("send:message", messageData);
-      setCurrentMessage("");
-    }
+    const messageData = {
+      message: currentMessage,
+      timestamp: new Date().toLocaleTimeString(),
+      author: username,
+      recipient: activeTab === "global" ? null : "private",
+    };
+
+    socket.emit("send:message", messageData);
+    setCurrentMessage("");
   };
 
   useEffect(() => {
     const sock = getPlayerSocket();
-    console.log("Socket created at chatbox");
     setSocket(sock);
-
-    return () => {
-      // console.log("Closing Socket !!");
-      // closeSocket();
-    };
+    return () => {};
   }, []);
 
   return (
-    <div className="flex flex-col h-full bg-gray-900 rounded-lg shadow-lg overflow-hidden">
-      {/* Header */}
-      <div className="bg-gray-800 text-blue-600 text-lg font-bold px-4 py-3 border-b border-gray-700 flex justify-between items-center">
-        <span>Chat Here!</span>
-        <select
-          className="bg-gray-700 text-white rounded-lg px-3 py-1 outline-none"
-          value={activeTab}
-          onChange={(e) => setActiveTab(e.target.value)}
-        >
-          <option value="global">Global Chat</option>
-          {accepted && <option value="private">Private Chat</option>}
-        </select>
-      </div>
+    <div
+      className={`fixed right-0 top-0 h-screen flex flex-col transition-all duration-300 ${
+        isOpen ? "w-96 bg-[#8E6BC5]" : "w-16"
+      }`}
+    >
+      {/* Toggle Button */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="absolute right-3 top-3 p-2 hover:bg-[#8E6BC5] rounded-full transition-colors"
+      >
+        {isOpen ? (
+          <X size={24} className="text-[#D3C5E5]" />
+        ) : (
+          <MessageCircle size={24} className="text-[#D3C5E5]" />
+        )}
+      </button>
 
-      {/* Chat Messages */}
-      {activeTab === "global" && (
-        <div className="flex-1 p-4 overflow-y-auto space-y-4">
-          {globalmessages.map((msg, index) => (
-            <div
-              key={index}
-              className={msg.author === username ? "text-right" : ""}
-            >
-              <div
-                className={`${
-                  msg.author === username
-                    ? "bg-gray-700/50 ml-auto"
-                    : "bg-gray-800"
-                } text-gray-200 text-sm p-3 rounded-lg max-w-xs`}
+      {isOpen && (
+        <div className="h-full flex flex-col pt-16">
+          {/* Header */}
+          <div className="px-4 py-3 mx-3 mb-4 bg-[#D3C5E5] rounded-lg">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-[#2D1B4E]">Game Chat</h2>
+              <select
+                className="bg-[#735DA5] text-white px-3 py-1 rounded-md outline-none"
+                value={activeTab}
+                onChange={(e) => setActiveTab(e.target.value)}
               >
-                <p className="text-lg text-blue-400">{msg.author}</p>
-                {msg.message}
-              </div>
+                <option value="global">Global</option>
+                {accepted && <option value="private">Private</option>}
+              </select>
             </div>
-          ))}
+          </div>
+
+          {/* Messages Container */}
+          <div
+            ref={containerRef}
+            className="flex-1 overflow-y-auto px-4 space-y-4 scrollbar-thin scrollbar-track-[#2D1B4E] scrollbar-thumb-[#D3C5E5] scrollbar-thumb-rounded-full scroll"
+          >
+            {activeTab === "global" &&
+              globalmessages.map((msg, index) => (
+                <div
+                  key={index}
+                  className={`flex ${
+                    msg.author === username ? "justify-end" : "justify-start"
+                  }`}
+                >
+                  <div
+                    className={`max-w-[75%] p-3 rounded-lg ${
+                      msg.author === username ? "bg-[#8E6BC5]" : "bg-[#4A2B7F]"
+                    }`}
+                  >
+                    <p className="text-sm font-semibold text-[#D3C5E5]">
+                      {msg.author}
+                    </p>
+                    <p className="text-white mt-1">{msg.message}</p>
+                  </div>
+                </div>
+              ))}
+
+            {activeTab === "private" &&
+              privatemessages.map((msg, index) => (
+                <div
+                  key={index}
+                  className={`flex ${
+                    msg.author === username ? "justify-end" : "justify-start"
+                  }`}
+                >
+                  <div
+                    className={`max-w-[75%] p-3 rounded-lg ${
+                      msg.author === username ? "bg-[#8E6BC5]" : "bg-[#4A2B7F]"
+                    }`}
+                  >
+                    <p className="text-sm font-semibold text-[#D3C5E5]">
+                      {msg.author}
+                    </p>
+                    <p className="text-white mt-1">{msg.message}</p>
+                  </div>
+                </div>
+              ))}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input Section */}
+          <div className="sticky bottom-0 p-4 bg-[#735DA5] border-t border-[#8E6BC5]">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                className="flex-1 bg-[#4A2B7F] text-white px-4 py-2 rounded-lg outline-none placeholder:text-[#D3C5E5]/60"
+                placeholder="Type a message..."
+                value={currentMessage}
+                onChange={(e) => setCurrentMessage(e.target.value)}
+                onKeyDown={(e) => {
+                  e.stopPropagation();
+                  if (e.key === "Enter") sendMessage();
+                }}
+              />
+              <button
+                onClick={sendMessage}
+                className="p-2 bg-[#D3C5E5] rounded-lg hover:bg-[#be9ce9] transition-colors"
+              >
+                <Send className="w-5 h-5 text-[#4A2B7F]" />
+              </button>
+            </div>
+          </div>
         </div>
       )}
-
-      {/* Private Chat Messages */}
-      {activeTab === "private" && (
-        <div className="flex-1 bg-gray-700/50 p-4 overflow-y-auto space-y-6">
-          {privatemessages.map((msg, index) => (
-            <div
-              key={index}
-              className={msg.author === username ? "text-right" : ""}
-            >
-              <p className="text-sm text-blue-400">{msg.author}</p>
-              <div
-                className={`${
-                  msg.author === username
-                    ? "bg-gray-700/50 ml-auto"
-                    : "bg-gray-800"
-                } text-gray-200 text-sm p-3 rounded-lg max-w-xs`}
-              >
-                {msg.message}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Input Section */}
-      <div className="bg-gray-800 p-4 flex items-center gap-3 border-t border-gray-700">
-        <input
-          type="text"
-          className="flex-1 bg-gray-700 text-white p-3 rounded-lg outline-none placeholder-gray-400"
-          placeholder="Type your message..."
-          value={currentMessage}
-          onChange={(e) => setCurrentMessage(e.target.value)}
-          onKeyDown={(e) => {
-            e.stopPropagation();
-            if (e.key === "Enter") {
-              sendMessage();
-            } else if (e.key === "Escape") {
-              e.target.blur();
-            }
-          }}
-        />
-        <button
-          onClick={sendMessage}
-          className="p-2 bg-blue-600 rounded-full hover:bg-blue-700 transition-colors"
-        >
-          <Send className="w-5 h-5" />
-        </button>
-      </div>
     </div>
   );
 };

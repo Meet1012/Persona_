@@ -1,7 +1,21 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from "vite";
+import { viteStaticCopy } from "vite-plugin-static-copy";
+import react from "@vitejs/plugin-react";
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
-})
+  plugins: [
+    viteStaticCopy({
+      targets: [
+        {
+          src: "src/assets/map/NewOfficeMap", // Path to your JSON
+          dest: "src/assets/map", // Output directory in `dist`
+        },
+        {
+          src: "src/assets/logo", // All sprites
+          dest: "src/assets",
+        },
+      ],
+    }),
+    react(),
+  ],
+});

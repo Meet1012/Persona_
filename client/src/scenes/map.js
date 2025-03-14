@@ -8,26 +8,26 @@ class MapScene extends Phaser.Scene {
 
   preload() {
     // Load map and tileset
-    this.load.tilemapTiledJSON("map", "../src/assets/map/RoomMap/map.json");
-    this.load.image("tiles", "../src/assets/map/RoomMap/office-tilemap-resized.jpg");
+    this.load.tilemapTiledJSON(
+      "map",
+      "../src/assets/map/NewOfficeMap/map.json"
+    );
+    this.load.image("tiles", "../src/assets/map/NewOfficeMap/Office_Map.jpg");
   }
 
   create() {
     // Load map and tileset layers
     const map = this.make.tilemap({ key: "map" });
-    const tileset = map.addTilesetImage("TileSet", "tiles");
+    const tileset = map.addTilesetImage("Office_Map", "tiles");
 
     // Create layers
-    const baseLayer = map.createLayer("Base", tileset, 0, 0);
-    // const treeLayer = map.createLayer("Trees", tileset, 0, 0);
     const wallsLayer = map.createLayer("Collision", tileset, 0, 0);
-    // const roadLayer = map.createLayer("Road", tileset, 0, 0);
-    // const houseLayer = map.createLayer("House", tileset, 0, 0);
+    const baseLayer = map.createLayer("Base", tileset, 0, 0).setDepth(0);
+    const gateLayer = map.createLayer("Gate", tileset, 0, 0);
 
     // Set collision on specific layers
-    // wallsLayer.setCollisionByProperty({ collides: true });
+    wallsLayer.setVisible(false);
     collisionLayer.layer = wallsLayer;
-    console.log("Collision Layer in map.js: ", collisionLayer);
     this.scene.launch("scene-game");
   }
 

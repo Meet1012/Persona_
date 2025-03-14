@@ -1,5 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
-import { getPlayerSocket } from "../scenes/getPlayerSocket";
+import { getPlayerSocket, closeSocket } from "../scenes/getPlayerSocket";
+import { Mic, MicOff, Video, VideoOff, PhoneOff } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const WebRTC = () => {
   const videoRef = useRef(null);
@@ -9,7 +11,11 @@ const WebRTC = () => {
   const [togeneratePeer, settogeneratePeer] = useState(false);
   const [flagValue, setFlagValue] = useState(false);
   const [showRemote, setShowRemote] = useState(false);
+  const [isMicOn, setIsMicOn] = useState(false);
+  const [isVideoOn, setIsVideoOn] = useState(false);
   const socket = getPlayerSocket();
+
+  const navigate = useNavigate();
 
   // Initialize PeerConnection
   const generatePeerConnection = () => {
@@ -78,6 +84,16 @@ const WebRTC = () => {
           audio: true,
         });
 
+        const audioTrack = localstream.getAudioTracks();
+        audioTrack.forEach((track) => {
+          track.enabled = isMicOn;
+        });
+
+        const videoTrack = localstream.getVideoTracks();
+        videoTrack.forEach((track) => {
+          track.enabled = isVideoOn;
+        });
+
         if (videoRef.current) {
           videoRef.current.srcObject = localstream;
         }
@@ -96,7 +112,7 @@ const WebRTC = () => {
 
     // Cleanup
     return () => {};
-  }, [otherSocketID, peerConnection]);
+  }, [otherSocketID, peerConnection, isMicOn, isVideoOn]);
 
   useEffect(() => {
     if (togeneratePeer) {
@@ -164,25 +180,73 @@ const WebRTC = () => {
   }, [otherSocketID, peerConnection]);
 
   return (
-    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
-      <div className="flex gap-4">
-        {/* Local Video */}
-        <video
-          ref={videoRef}
-          className="w-48 h-auto rounded-lg border-2 border-gray-300 shadow-lg"
-          autoPlay
-          playsInline
-          muted
-        />
-        {/* Remote Video */}
-        {showRemote && (
+    <div>
+      <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
+        <div className="flex gap-4">
+          {/* Local Video */}
           <video
-            ref={remoteRef}
+            ref={videoRef}
             className="w-48 h-auto rounded-lg border-2 border-gray-300 shadow-lg"
             autoPlay
             playsInline
+            muted
           />
-        )}
+          {/* Remote Video */}
+          {showRemote && (
+            <video
+              ref={remoteRef}
+              className="w-48 h-auto rounded-lg border-2 border-gray-300 shadow-lg"
+              autoPlay
+              playsInline
+            />
+          )}
+        </div>
+      </div>
+      <div className="fixed bottom-0 left-0 right-0 flex justify-center p-4 bg-[#2D1B4E]/90 backdrop-blur-sm">
+        <div className="flex items-center gap-4 p-2 rounded-xl bg-[#735DA5] shadow-lg">
+          {/* Mic Button */}
+          <button
+            onClick={() => setIsMicOn(!isMicOn)}
+            className={`p-2 rounded-lg ${
+              isMicOn
+                ? "bg-[#D3C5E5] hover:bg-[#be9ce9]"
+                : "bg-[#4A2B7F] hover:bg-[#3F2B5E]"
+            } transition-colors`}
+          >
+            {isMicOn ? (
+              <Mic className="w-4 h-4 text-[#2D1B4E]" />
+            ) : (
+              <MicOff className="w-4 h-4 text-[#D3C5E5]" />
+            )}
+          </button>
+
+          {/* Video Button */}
+          <button
+            onClick={() => setIsVideoOn(!isVideoOn)}
+            className={`p-2 rounded-lg ${
+              isVideoOn
+                ? "bg-[#D3C5E5] hover:bg-[#be9ce9]"
+                : "bg-[#4A2B7F] hover:bg-[#3F2B5E]"
+            } transition-colors`}
+          >
+            {isVideoOn ? (
+              <Video className="w-4 h-4 text-[#2D1B4E]" />
+            ) : (
+              <VideoOff className="w-4 h-4 text-[#D3C5E5]" />
+            )}
+          </button>
+
+          {/* Leave Button */}
+          <button
+            onClick={() => {
+              closeSocket();
+              navigate("/");
+            }}
+            className="p-2 rounded-lg bg-red-500 hover:bg-red-600 transition-colors"
+          >
+            <PhoneOff className="w-4 h-4 text-white" />
+          </button>
+        </div>
       </div>
     </div>
   );

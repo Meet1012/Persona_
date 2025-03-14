@@ -49,9 +49,11 @@ class GameScene extends Phaser.Scene {
 
     // Main player setup
     this.player = this.physics.add
-      .sprite(100, 100, "monsterdown")
-      .setScale(0.05);
+      .sprite(141, 608, "monsterdown")
+      .setScale(0.05)
+      .setDepth(1);
     this.player.setCollideWorldBounds(true);
+    console.log("PLayer Depth: ", this.player.depth);
 
     this.mainplayerText = this.add
       .text(this.player.x, this.player.y - 25, this.name, {
@@ -77,6 +79,7 @@ class GameScene extends Phaser.Scene {
 
     // Interaction UI
     this.createInteractionUI();
+
     console.log("Collision Layer in player.js: ", collisionLayer.layer.layer);
     this.physics.add.collider(this.player, collisionLayer.layer.layer);
     collisionLayer.layer.layer.setCollisionBetween(0, 1);
